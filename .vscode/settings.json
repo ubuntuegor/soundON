@@ -1,0 +1,10 @@
+{
+    "[cpp]": {
+        "editor.tabSize": 2,
+        "editor.formatOnSave": true
+    },
+    "C_Cpp.inlayHints.autoDeclarationTypes.enabled": true,
+    "C_Cpp.inlayHints.parameterNames.enabled": true,
+    "C_Cpp.inlayHints.referenceOperator.enabled": true,
+    "C_Cpp.codeAnalysis.clangTidy.enabled": true
+}
