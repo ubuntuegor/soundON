@@ -27,7 +27,8 @@ endif()
 # Our Project
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(${PROJECT_NAME} main.cpp)
+file(GLOB sosu_sources ./src/*.cpp)
+add_executable(${PROJECT_NAME} ${sosu_sources})
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 
