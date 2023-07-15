@@ -27,10 +27,15 @@ endif()
 # Our Project
 set(CMAKE_CXX_STANDARD 17)
 
-file(GLOB sosu_sources ./src/*.cpp)
+include_directories(libs)
+
+file(GLOB_RECURSE sosu_sources src/*.cpp)
 add_executable(${PROJECT_NAME} ${sosu_sources})
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
+
+add_executable(test_crap test/main.cpp)
+target_link_libraries(test_crap raylib)
 
 # Web Configurations
 if (${PLATFORM} STREQUAL "Web")
