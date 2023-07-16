@@ -1,7 +1,7 @@
 #pragma once
 #include <raylib.h>
 #include <vector>
-#include "../level_data.hpp"
+#include "../level.hpp"
 #include "base_screen.hpp"
 
 class LevelScreen : public BaseScreen {
@@ -10,7 +10,7 @@ class LevelScreen : public BaseScreen {
   double gameTime = 0;
   int hits = 0;
   LevelData data;
-  std::vector<std::pair<double, events::Arrow>> arrows_to_draw;
+  std::vector<std::pair<double, events::Arrow>> arrowsToDraw;
 
   Music music;
 

@@ -35,7 +35,7 @@ void LevelScreen::init() {
 
 void LevelScreen::updateState(double currentTime) {
   gameTime = currentTime - startTime;
-  arrows_to_draw.clear();
+  arrowsToDraw.clear();
 
   double reachTime = 500 / ARROWSPEED;
 
@@ -69,7 +69,7 @@ void LevelScreen::updateState(double currentTime) {
       if ((event.time - gameTime) > reachTime)
         continue;
 
-      arrows_to_draw.push_back({event.time - gameTime, arrow});
+      arrowsToDraw.push_back({event.time - gameTime, arrow});
     }
   }
 }
@@ -108,7 +108,7 @@ void LevelScreen::drawFrame() {
     // gametime
     DrawText(TextFormat("%f", gameTime), 10, 10, 20, RED);
 
-    for (auto i = arrows_to_draw.rbegin(); i != arrows_to_draw.rend(); i++) {
+    for (auto i = arrowsToDraw.rbegin(); i != arrowsToDraw.rend(); i++) {
       float distance = static_cast<float>(i->first) * ARROWSPEED;
 
       switch (i->second.direction) {

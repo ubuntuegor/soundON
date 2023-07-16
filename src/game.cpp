@@ -1,11 +1,13 @@
 #include "game.hpp"
+#include <reasings.h>
 #include "config.hpp"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-Game::Game(std::unique_ptr<BaseScreen> initialScreen)
-    : screen{std::move(initialScreen)} {
+#define TRANSITION_DURATION 0.7
+
+Game::Game() {
   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
   InitWindow(GAMEWIDTH, GAMEHEIGHT, "soundON!");
   SetWindowMinSize(400, 300);
@@ -13,8 +15,6 @@ Game::Game(std::unique_ptr<BaseScreen> initialScreen)
   InitAudioDevice();
 
   target = LoadRenderTexture(GAMEWIDTH, GAMEHEIGHT);
-
-  screen->init();
 }
 
 Game::~Game() {
@@ -22,11 +22,58 @@ Game::~Game() {
   CloseWindow();
 }
 
+void Game::setInitialScreen(std::unique_ptr<BaseScreen> initialScreen) {
+  if (screen) {
+    TraceLog(LOG_WARNING, "Trying to set initial screen repeatedly");
+    return;
+  }
+
+  screen = std::move(initialScreen);
+  screen->init();
+}
+
+void Game::setNextScreen(std::unique_ptr<BaseScreen> nScreen) {
+  if (nextScreen)
+    return;
+
+  nextScreen = std::move(nScreen);
+}
+
 void Game::doFrame() {
   // Update game state
   // -----------------
 
-  screen->updateState(GetTime());
+  double time = GetTime();
+
+  if (transitionState == 0) {
+    screen->updateState(time);
+  }
+
+  if (transitionState == 0 && nextScreen) {
+    transitionState = 1;
+    transitionStart = time;
+  }
+
+  if (time - transitionStart > TRANSITION_DURATION) {
+    if (transitionState == 1) {
+      transitionState = 2;
+      transitionStart = time;
+      screen = std::move(nextScreen);
+      screen->init();
+    } else if (transitionState == 2) {
+      transitionState = 0;
+      fade = .0f;
+      transitionStart = -1;
+    }
+  }
+
+  if (transitionState == 1) {
+    fade = EaseSineIn((float)time - (float)transitionStart, 0.0f, 1.0f,
+                      (float)TRANSITION_DURATION);
+  } else if (transitionState == 2) {
+    fade = EaseSineOut((float)time - (float)transitionStart, 1.0f, -1.0f,
+                       (float)TRANSITION_DURATION);
+  }
 
   // Draw to texture
   // ---------------
@@ -34,6 +81,10 @@ void Game::doFrame() {
   BeginTextureMode(target);
 
   screen->drawFrame();
+
+  if (transitionState != 0) {
+    DrawRectangle(0, 0, GAMEWIDTH, GAMEHEIGHT, Fade(BLACK, fade));
+  }
 
   EndTextureMode();
 
@@ -58,6 +109,11 @@ void Game::doFrame() {
 }
 
 void Game::mainLoop() {
+  if (!screen) {
+    TraceLog(LOG_ERROR, "No initial screen set");
+    return;
+  }
+
   while (!WindowShouldClose()) {
     doFrame();
   }
