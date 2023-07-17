@@ -2,9 +2,8 @@
 #include <raylib.h>
 
 class GameLogoDrawable {
-  double colorStart = -1;
-  double fillStart = -1;
-  int fillState = 0;
+  double colorTime = 0;
+  double fillTime = 0;
   int goal = 0;
 
   float hue = 0;
@@ -15,6 +14,6 @@ class GameLogoDrawable {
  public:
   GameLogoDrawable(Color bgColor);
 
-  void update(double time);
+  void update(double time, double prevFrameTime);
   void draw(int posX, int posY);
 };

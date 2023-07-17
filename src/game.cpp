@@ -45,35 +45,42 @@ void Game::doFrame() {
 
   double time = GetTime();
 
-  if (transitionState == 0) {
-    screen->updateState(time);
+  if (prevFrameTime == -1) {
+    prevFrameTime = time;
   }
 
-  if (transitionState == 0 && nextScreen) {
+  if (transitionState != 0) {
+    transitionTime += time - prevFrameTime;
+  }
+
+  screen->updateState(time, prevFrameTime);
+
+  if (nextScreen && transitionState == 0) {
     transitionState = 1;
-    transitionStart = time;
+    transitionTime = 0;
   }
 
-  if (time - transitionStart > TRANSITION_DURATION) {
+  if (transitionTime > TRANSITION_DURATION) {
     if (transitionState == 1) {
       transitionState = 2;
-      transitionStart = time;
+      transitionTime = 0;
+
       screen = std::move(nextScreen);
       screen->init();
     } else if (transitionState == 2) {
       transitionState = 0;
-      fade = .0f;
-      transitionStart = -1;
     }
   }
 
   if (transitionState == 1) {
-    fade = EaseSineIn((float)time - (float)transitionStart, 0.0f, 1.0f,
+    fade = EaseSineIn((float)transitionTime, 0.0f, 1.0f,
                       (float)TRANSITION_DURATION);
   } else if (transitionState == 2) {
-    fade = EaseSineOut((float)time - (float)transitionStart, 1.0f, -1.0f,
+    fade = EaseSineOut((float)transitionTime, 1.0f, -1.0f,
                        (float)TRANSITION_DURATION);
   }
+
+  prevFrameTime = time;
 
   // Draw to texture
   // ---------------

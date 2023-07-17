@@ -5,8 +5,7 @@
 #include "base_screen.hpp"
 
 class LevelScreen : public BaseScreen {
-  bool started = false;
-  double startTime = 0;
+  float lastMusicTime = 0;
   double gameTime = 0;
   int hits = 0;
   LevelData data;
@@ -18,6 +17,6 @@ class LevelScreen : public BaseScreen {
   LevelScreen(LevelData data);
 
   void init() override;
-  void updateState(double time) override;
+  void updateState(double time, double prevFrameTime) override;
   void drawFrame() override;
 };

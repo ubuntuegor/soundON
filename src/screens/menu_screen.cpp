@@ -11,24 +11,21 @@
 #define BREATHE_LIMIT 0.7f
 #define BREATHE_DURATION 1.2
 
-void MenuScreen::updateState(double time) {
-  logo.update(time);
+void MenuScreen::updateState(double time, double prevFrameTime) {
+  logo.update(time, prevFrameTime);
 
-  if (breatheStart == -1) {
-    breatheStart = time;
-  }
+  breatheTime += time - prevFrameTime;
 
-  if (time - breatheStart > BREATHE_DURATION) {
-    breatheStart = time;
-    breatheState ^= 1;
-  }
-
-  if (breatheState == 0) {
-    breathe = EaseSineInOut((float)time - (float)breatheStart, 1.0f,
-                            BREATHE_LIMIT - 1.0f, (float)BREATHE_DURATION);
+  if (breatheTime < BREATHE_DURATION) {
+    breathe = EaseSineInOut((float)breatheTime, 1.0f, BREATHE_LIMIT - 1.0f,
+                            (float)BREATHE_DURATION);
+  } else if (breatheTime < BREATHE_DURATION * 2) {
+    breathe = EaseSineInOut((float)breatheTime - (float)BREATHE_DURATION,
+                            BREATHE_LIMIT, 1.0f - BREATHE_LIMIT,
+                            (float)BREATHE_DURATION);
   } else {
-    breathe = EaseSineInOut((float)time - (float)breatheStart, BREATHE_LIMIT,
-                            1.0f - BREATHE_LIMIT, (float)BREATHE_DURATION);
+    breatheTime = 0;
+    breathe = 1.0f;
   }
 
   if (IsKeyPressed(KEY_ENTER)) {

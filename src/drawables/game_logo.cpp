@@ -12,41 +12,33 @@ int getRandomGoal() {
 }
 }  // namespace
 
-GameLogoDrawable::GameLogoDrawable(Color bgColor) : bgColor{bgColor} {}
+GameLogoDrawable::GameLogoDrawable(Color bgColor) : bgColor{bgColor} {
+  goal = getRandomGoal();
+}
 
-void GameLogoDrawable::update(double time) {
-  if (colorStart == -1) {
-    colorStart = time;
+void GameLogoDrawable::update(double time, double prevFrameTime) {
+  double deltaTime = time - prevFrameTime;
+
+  colorTime += deltaTime;
+  fillTime += deltaTime;
+
+  if (colorTime > COLOR_CYCLE_DURATION) {
+    colorTime = 0;
   }
 
-  if (fillStart == -1) {
-    fillStart = time;
-  }
+  hue = EaseLinearNone((float)colorTime, 0, 360, COLOR_CYCLE_DURATION);
 
-  if (time - colorStart > COLOR_CYCLE_DURATION) {
-    colorStart = time;
-  }
-
-  hue = EaseLinearNone((float)time - (float)colorStart, 0, 360,
-                       COLOR_CYCLE_DURATION);
-
-  if (time - fillStart > FILL_STEP_DURATION) {
-    fillStart = time;
-
-    if (fillState == 0) {
-      fillState = 1;
-    } else {
-      fillState = 0;
-      goal = getRandomGoal();
-    }
-  }
-
-  if (fillState == 0) {
-    fill = (int)EaseSineOut((float)time - (float)fillStart, 0, (float)goal,
+  if (fillTime < FILL_STEP_DURATION) {
+    fill = (int)EaseSineOut((float)fillTime, 0, (float)goal,
                             (float)FILL_STEP_DURATION);
+  } else if (fillTime < FILL_STEP_DURATION * 2) {
+    fill =
+        (int)EaseSineIn((float)fillTime - (float)FILL_STEP_DURATION,
+                        (float)goal, (float)-goal, (float)FILL_STEP_DURATION);
   } else {
-    fill = (int)EaseSineIn((float)time - (float)fillStart, (float)goal,
-                           (float)-goal, (float)FILL_STEP_DURATION);
+    fillTime = 0;
+    fill = 0;
+    goal = getRandomGoal();
   }
 }
 

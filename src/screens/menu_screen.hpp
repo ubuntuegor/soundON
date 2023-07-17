@@ -9,13 +9,12 @@
 class MenuScreen : public BaseScreen {
   Game& game;
   GameLogoDrawable logo{BG_COLOR};
-  double breatheStart = -1;
-  int breatheState = 0;
+  double breatheTime = 0;
   float breathe = 1.0f;
 
  public:
   MenuScreen(Game& game) : game{game} {}
 
-  void updateState(double time) override;
+  void updateState(double time, double prevFrameTime) override;
   void drawFrame() override;
 };

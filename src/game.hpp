@@ -8,8 +8,10 @@ class Game {
   std::unique_ptr<BaseScreen> screen;
   std::unique_ptr<BaseScreen> nextScreen;
 
+  double prevFrameTime = -1;
+
   int transitionState = 0;
-  double transitionStart = -1;
+  double transitionTime = 0;
   float fade = .0f;
 
   void doFrame();
