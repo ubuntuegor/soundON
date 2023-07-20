@@ -1,7 +1,8 @@
 #include "level_provider.hpp"
 
 LevelData LevelProvider::getLevel() {
-  return LevelData("sharks.mp3", "",
+  return LevelData({"Sharks", "Shiver", "NCS", "sharks.mp3", "sharks.jpg"},
+                   "shark.glb",
                    {
                        events::createArrow(2.003, Direction::TOP),
                        events::createArrow(5.696, Direction::TOP),

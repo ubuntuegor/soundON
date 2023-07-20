@@ -3,13 +3,23 @@
 #include <vector>
 #include "events.hpp"
 
-struct LevelData {
+struct SongData {
+  std::string artist;
+  std::string title;
+  std::string label;
+
   std::string musicPath;
+  std::string coverPath;
+};
+
+struct LevelData {
+  SongData song;
+
   std::string bgModelPath;
   std::vector<events::Event> events;
 
-  LevelData(std::string musicPath,
+  LevelData(SongData song,
             std::string bgModelPath,
             std::vector<events::Event> events)
-      : musicPath{musicPath}, bgModelPath{bgModelPath}, events{events} {}
+      : song{song}, bgModelPath{bgModelPath}, events{events} {}
 };

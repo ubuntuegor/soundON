@@ -15,6 +15,7 @@ Game::Game() {
   InitAudioDevice();
 
   target = LoadRenderTexture(GAMEWIDTH, GAMEHEIGHT);
+  SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
 }
 
 Game::~Game() {

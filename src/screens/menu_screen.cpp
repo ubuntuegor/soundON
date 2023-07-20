@@ -3,7 +3,7 @@
 #include <reasings.h>
 #include "../config.hpp"
 #include "../level_provider.hpp"
-#include "level_screen.hpp"
+#include "level_screen2.hpp"
 
 #define MENU_FONT_SIZE 30
 #define COPYRIGHT_FONT_SIZE 20
@@ -29,7 +29,8 @@ void MenuScreen::updateState(double time, double prevFrameTime) {
   }
 
   if (IsKeyPressed(KEY_ENTER)) {
-    auto levelScreen = std::make_unique<LevelScreen>(LevelProvider::getLevel());
+    auto levelScreen =
+        std::make_unique<LevelScreen2>(LevelProvider::getLevel());
     game.setNextScreen(std::move(levelScreen));
   }
 }

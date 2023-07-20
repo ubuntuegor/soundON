@@ -29,7 +29,7 @@ void drawArrow(Direction direction, Vector2 pos, Color color) {
 LevelScreen::LevelScreen(LevelData data) : data{data} {}
 
 void LevelScreen::init() {
-  music = LoadMusicStream(data.musicPath.c_str());
+  music = LoadMusicStream(data.song.musicPath.c_str());
   music.looping = false;
   PlayMusicStream(music);
 }
