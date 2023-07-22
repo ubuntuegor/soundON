@@ -1,5 +1,4 @@
 #include "game.hpp"
-#include "screens/level_screen.hpp"
 #include "screens/menu_screen.hpp"
 
 int main() {

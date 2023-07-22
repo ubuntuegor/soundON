@@ -2,9 +2,6 @@
 #include <reasings.h>
 #include "../config.hpp"
 
-#define HUE1 160
-#define HUE2 210
-
 #define OPACITY 255
 
 #define COLOR_DURATION 10.0
@@ -19,16 +16,20 @@ void LevelBackground::init() {
   model = LoadModel(modelPath.c_str());
 }
 
+LevelBackground::~LevelBackground() {
+  UnloadModel(model);
+}
+
 void LevelBackground::update(double time, double prevFrameTime) {
   UpdateCamera(&camera, CAMERA_ORBITAL);
 
   colorTime += time - prevFrameTime;
 
   if (colorTime < COLOR_DURATION) {
-    hue = EaseLinearNone((float)colorTime, HUE1, HUE2 - HUE1, COLOR_DURATION);
+    hue = EaseLinearNone((float)colorTime, hue1, hue2 - hue1, COLOR_DURATION);
   } else if (colorTime < COLOR_DURATION * 2) {
-    hue = EaseLinearNone((float)colorTime - (float)COLOR_DURATION, HUE2,
-                         HUE1 - HUE2, COLOR_DURATION);
+    hue = EaseLinearNone((float)colorTime - (float)COLOR_DURATION, hue2,
+                         hue1 - hue2, COLOR_DURATION);
   }
 }
 

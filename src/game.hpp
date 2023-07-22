@@ -17,6 +17,8 @@ class Game {
   void doFrame();
 
  public:
+  Shader* activeShader = nullptr;
+
   Game();
   ~Game();
 

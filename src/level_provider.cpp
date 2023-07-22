@@ -2,7 +2,7 @@
 
 LevelData LevelProvider::getLevel() {
   return LevelData({"Sharks", "Shiver", "NCS", "sharks.mp3", "sharks.jpg"},
-                   "shark.glb",
+                   "shark.glb", 160, 210,
                    {
                        events::createArrow(2.003, Direction::TOP),
                        events::createArrow(5.696, Direction::TOP),

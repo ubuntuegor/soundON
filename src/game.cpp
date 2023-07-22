@@ -20,6 +20,7 @@ Game::Game() {
 
 Game::~Game() {
   UnloadRenderTexture(target);
+  CloseAudioDevice();
   CloseWindow();
 }
 
@@ -105,6 +106,9 @@ void Game::doFrame() {
   BeginDrawing();
 
   ClearBackground(BLACK);
+  if (activeShader != nullptr) {
+    BeginShaderMode(*activeShader);
+  }
   DrawTexturePro(
       target.texture,
       {0, 0, (float)target.texture.width, (float)-target.texture.height},
@@ -112,7 +116,9 @@ void Game::doFrame() {
        (GetScreenHeight() - (GAMEHEIGHT * textureScale)) * 0.5f,
        GAMEWIDTH * textureScale, GAMEHEIGHT * textureScale},
       {0, 0}, 0, WHITE);
-
+  if (activeShader != nullptr) {
+    EndShaderMode();
+  }
   EndDrawing();
 }
 
