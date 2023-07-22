@@ -34,18 +34,19 @@ add_executable(${PROJECT_NAME} ${sosu_sources})
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 
-add_executable(test_crap test/main.cpp)
-target_link_libraries(test_crap raylib)
-
 # Web Configurations
 if (${PLATFORM} STREQUAL "Web")
-    # Tell Emscripten to build an example.html file.
-    set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
+  # Tell Emscripten to build an example.html file.
+  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
+  set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "--preload-file resources")
+else()
+  file(COPY "resources" DESTINATION "./Debug")
+  file(COPY "resources" DESTINATION "./Release")
 endif()
 
 # Checks if OSX and links appropriate frameworks (Only required on MacOS)
 if (APPLE)
-    target_link_libraries(${PROJECT_NAME} "-framework IOKit")
-    target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
-    target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
+  target_link_libraries(${PROJECT_NAME} "-framework IOKit")
+  target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
+  target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
 endif()

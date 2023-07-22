@@ -26,6 +26,14 @@
 #define EFFECT_IN 0.2
 #define EFFECT_OUT 0.3
 
+#define BLUR_WIDTH 0.1f
+
+#if defined(PLATFORM_DESKTOP)
+#define GLSL_VERSION 330
+#else  // PLATFORM_RPI, PLATFORM_ANDROID, PLATFORM_WEB
+#define GLSL_VERSION 100
+#endif
+
 namespace {
 RotationStack addRotation(RotationStack rs, Rotation r) {
   if (rs.first == r) {
@@ -145,8 +153,13 @@ void LevelScreen::init() {
   music.looping = false;
   PlayMusicStream(music);
 
-  blurShader = LoadShader(0, "blur.fs");
-  // game.activeShader = &blurShader;
+  blurShader = LoadShader(
+      0, TextFormat("resources/shaders/glsl%i/blur.fs", GLSL_VERSION));
+  blurWidthLocation = GetShaderLocation(blurShader, "blurWidth");
+
+  bloomShader = LoadShader(
+      0, TextFormat("resources/shaders/glsl%i/bloom.fs", GLSL_VERSION));
+  bloomStrengthLocation = GetShaderLocation(bloomShader, "strength");
 }
 
 void LevelScreen::updateState(double time, double prevFrameTime) {
@@ -302,22 +315,57 @@ void LevelScreen::updateState(double time, double prevFrameTime) {
           blindnessTime = BLINDING_DURATION;
         }
       }
-    } else if (std::holds_alternative<events::Kick>(event->data) ||
-               std::holds_alternative<events::Snare>(event->data)) {
+    } else if (std::holds_alternative<events::Kick>(event->data)) {
       double inTime = event->gameTime - EFFECT_IN;
       double outTime = event->gameTime + EFFECT_OUT;
 
       if (gameTime > outTime) {
-        effectTime = -1;
+        game.activeShader = nullptr;
+
         event = activeEvents.erase(event);
         continue;
       }
 
       if (gameTime >= inTime) {
-        effectTime = gameTime - inTime;
-        effect = (std::holds_alternative<events::Kick>(event->data))
-                     ? LevelEffect::KICK
-                     : LevelEffect::SNARE;
+        game.activeShader = &blurShader;
+        float blurWidth;
+
+        if (gameTime >= event->gameTime) {
+          blurWidth = EaseSineOut((float)gameTime - (float)event->gameTime,
+                                  BLUR_WIDTH, -BLUR_WIDTH, (float)EFFECT_OUT);
+        } else {
+          blurWidth = EaseSineIn((float)gameTime - (float)inTime, 0.0f,
+                                 BLUR_WIDTH, (float)EFFECT_IN);
+        }
+
+        SetShaderValue(blurShader, blurWidthLocation, &blurWidth,
+                       SHADER_UNIFORM_FLOAT);
+      }
+    } else if (std::holds_alternative<events::Snare>(event->data)) {
+      double inTime = event->gameTime - EFFECT_IN;
+      double outTime = event->gameTime + EFFECT_OUT;
+
+      if (gameTime > outTime) {
+        game.activeShader = nullptr;
+
+        event = activeEvents.erase(event);
+        continue;
+      }
+
+      if (gameTime >= inTime) {
+        game.activeShader = &bloomShader;
+        float bloomStrength;
+
+        if (gameTime >= event->gameTime) {
+          bloomStrength = EaseSineOut((float)gameTime - (float)event->gameTime,
+                                      1.0, -1.0, (float)EFFECT_OUT);
+        } else {
+          bloomStrength = EaseSineIn((float)gameTime - (float)inTime, 0.0, 1.0,
+                                     (float)EFFECT_IN);
+        }
+
+        SetShaderValue(bloomShader, bloomStrengthLocation, &bloomStrength,
+                       SHADER_UNIFORM_FLOAT);
       }
     } else {
       TraceLog(LOG_ERROR, "Unknown event type at %f", event->gameTime);
@@ -632,7 +680,7 @@ void LevelScreen::drawFrame() {
 }
 
 LevelScreen::~LevelScreen() {
-  game.activeShader = nullptr;
   UnloadMusicStream(music);
   UnloadShader(blurShader);
+  UnloadShader(bloomShader);
 }

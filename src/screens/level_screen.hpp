@@ -24,8 +24,6 @@ struct ArrowGhost {
   bool missed;
 };
 
-enum class LevelEffect { KICK, SNARE };
-
 enum class Rank { PERFECT, GREAT, GOOD, MISS };
 
 class LevelScreen : public BaseScreen {
@@ -51,12 +49,14 @@ class LevelScreen : public BaseScreen {
 
   double blindnessTime = -1;
 
-  double effectTime = -1;
-  LevelEffect effect;
-
   LevelBackground bg;
   Camera2D axisCamera;
+
   Shader blurShader;
+  int blurWidthLocation;
+
+  Shader bloomShader;
+  int bloomStrengthLocation;
 
   void fetchNewEvents();
 

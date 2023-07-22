@@ -67,6 +67,7 @@ void Game::doFrame() {
       transitionState = 2;
       transitionTime = 0;
 
+      activeShader = nullptr;
       screen = std::move(nextScreen);
       screen->init();
     } else if (transitionState == 2) {
