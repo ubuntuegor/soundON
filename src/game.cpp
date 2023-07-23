@@ -2,13 +2,21 @@
 #include <reasings.h>
 #include "config.hpp"
 
+#if defined(PLATFORM_WEB)
+#include <emscripten/emscripten.h>
+#endif
+
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 #define TRANSITION_DURATION 0.7
 
+void emscriptenLoop(void* game) {
+  static_cast<Game*>(game)->doFrame();
+}
+
 Game::Game() {
-  SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+  SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
   InitWindow(GAMEWIDTH, GAMEHEIGHT, "soundON!");
   SetWindowMinSize(400, 300);
 
@@ -129,7 +137,11 @@ void Game::mainLoop() {
     return;
   }
 
+#if defined(PLATFORM_WEB)
+  emscripten_set_main_loop_arg(emscriptenLoop, this, 0, 1);
+#else
   while (!WindowShouldClose()) {
     doFrame();
   }
+#endif
 }

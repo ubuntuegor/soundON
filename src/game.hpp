@@ -25,4 +25,6 @@ class Game {
   void setInitialScreen(std::unique_ptr<BaseScreen> initialScreen);
   void setNextScreen(std::unique_ptr<BaseScreen> nextScreen);
   void mainLoop();
+
+  friend void emscriptenLoop(void* game);
 };

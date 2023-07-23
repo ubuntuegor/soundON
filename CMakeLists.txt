@@ -38,7 +38,7 @@ target_link_libraries(${PROJECT_NAME} raylib)
 if (${PLATFORM} STREQUAL "Web")
   # Tell Emscripten to build an example.html file.
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
-  set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "--preload-file resources")
+  set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "--preload-file ../resources -s USE_GLFW=3")
 else()
   file(COPY "resources" DESTINATION "./Debug")
   file(COPY "resources" DESTINATION "./Release")

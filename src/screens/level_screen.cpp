@@ -178,7 +178,7 @@ void LevelScreen::updateState(double time, double prevFrameTime) {
 
   if (musicTime != lastMusicTime) {
     gameTime = musicTime;
-  } else if (deltaTime < (1.0 / 100)) {
+  } else if (deltaTime < (1.0 / 20)) {
     gameTime += deltaTime;
   }
 
