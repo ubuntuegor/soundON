@@ -1,5 +1,6 @@
 #pragma once
 #include "../drawables/level_background.hpp"
+#include "../drawables/song_info.hpp"
 #include "../game.hpp"
 #include "../level.hpp"
 #include "../score.hpp"
@@ -53,6 +54,7 @@ class LevelScreen : public BaseScreen {
 
   LevelBackground bg;
   Camera2D axisCamera;
+  SongInfoDrawable songInfo;
 
   Shader blurShader;
   int blurWidthLocation;
@@ -64,7 +66,10 @@ class LevelScreen : public BaseScreen {
 
  public:
   LevelScreen(Game& game, LevelData data)
-      : game{game}, data{data}, bg{data.bgModelPath, data.hue1, data.hue2} {}
+      : game{game},
+        data{data},
+        bg{data.bgModelPath, data.hue1, data.hue2},
+        songInfo{data.song} {}
   ~LevelScreen() override;
 
   void init() override;

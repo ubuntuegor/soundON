@@ -148,6 +148,7 @@ void LevelScreen::fetchNewEvents() {
 
 void LevelScreen::init() {
   bg.init();
+  songInfo.init();
 
   axisCamera.target = {GAMEWIDTH / 2, GAMEHEIGHT / 2};
   axisCamera.offset = {GAMEWIDTH / 2, GAMEHEIGHT / 2};
@@ -172,9 +173,10 @@ void LevelScreen::updateState(double time, double prevFrameTime) {
   // ----------
   UpdateMusicStream(music);
 
-  // Update background
-  // -----------------
+  // Update background and song info
+  // -------------------------------
   bg.update(time, prevFrameTime);
+  songInfo.update(time, prevFrameTime);
 
   // Update gametime
   // ---------------
@@ -792,6 +794,10 @@ void LevelScreen::drawFrame() {
                20, GRAY);
     }
   }
+
+  // Draw song info (aka lower third)
+  // ----------------------------
+  songInfo.draw();
 
 #ifdef DRAWFPS
   DrawFPS(GAMEWIDTH - 100, 10);

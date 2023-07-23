@@ -3,7 +3,7 @@
 LevelData LevelProvider::getLevel() {
   return LevelData(
       {"Sharks", "Shiver", "NCS", "resources/levels/shiver/music.mp3",
-       "resources/levels/shiver/cover.jpg"},
+       "resources/levels/shiver/cover.png"},
       "resources/levels/shiver/model.glb", 160, 210,
       {
           events::createArrow(2.03, Direction::LEFT),
