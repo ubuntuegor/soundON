@@ -16,7 +16,7 @@ void emscriptenLoop(void* game) {
 }
 
 Game::Game() {
-  SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
+  SetConfigFlags(FLAG_WINDOW_RESIZABLE);
   InitWindow(GAMEWIDTH, GAMEHEIGHT, "soundON!");
   SetWindowMinSize(400, 300);
 
