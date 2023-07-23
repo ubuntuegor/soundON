@@ -1,10 +1,23 @@
 #include "level_background.hpp"
+#include <raymath.h>
+#include <rcamera.h>
 #include <reasings.h>
 #include "../config.hpp"
 
 #define OPACITY 255
+#define CAMERA_ORBITAL_SPEED 0.5f
 
 #define COLOR_DURATION 10.0
+
+namespace {
+void myUpdateCamera(Camera* camera) {
+  Matrix rotation =
+      MatrixRotate(GetCameraUp(camera), CAMERA_ORBITAL_SPEED * GetFrameTime());
+  Vector3 view = Vector3Subtract(camera->position, camera->target);
+  view = Vector3Transform(view, rotation);
+  camera->position = Vector3Add(camera->target, view);
+}
+}  // namespace
 
 void LevelBackground::init() {
   camera.position = {0.0f, 0.0f, 12.0f};
@@ -21,7 +34,7 @@ LevelBackground::~LevelBackground() {
 }
 
 void LevelBackground::update(double time, double prevFrameTime) {
-  UpdateCamera(&camera, CAMERA_ORBITAL);
+  myUpdateCamera(&camera);
 
   colorTime += time - prevFrameTime;
 
