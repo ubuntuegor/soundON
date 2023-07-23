@@ -48,4 +48,8 @@ void MenuScreen::drawFrame() {
   textWidth = MeasureText(text, COPYRIGHT_FONT_SIZE);
   DrawText(text, GAMEWIDTH - textWidth - 10, GAMEHEIGHT - 24,
            COPYRIGHT_FONT_SIZE, GRAY);
+
+  text = "controls: arrow keys";
+  textWidth = MeasureText(text, COPYRIGHT_FONT_SIZE);
+  DrawText(text, (GAMEWIDTH - textWidth) / 2, 450, COPYRIGHT_FONT_SIZE, GRAY);
 }

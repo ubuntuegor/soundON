@@ -13,9 +13,9 @@ uniform vec4 colDiffuse;
 // NOTE: Add here your custom variables
 
 const float threshold = 0.1;
-const float unit = 3.0;
+const float unit = 5.0;
 const int radius = 4;
-const float dim = 15.0;
+const float dim = 28.0;
 
 uniform float strength;
 

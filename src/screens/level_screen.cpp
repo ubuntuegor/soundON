@@ -3,6 +3,8 @@
 #include <map>
 #include "../config.hpp"
 #include "../drawables/arrows.hpp"
+#include "../mark.hpp"
+#include "menu_screen.hpp"
 
 #define ARROWSPEED 250
 
@@ -15,24 +17,27 @@
 #define GOOD_SCORE 50
 #define HOLD_SCORE 50
 
-#define HOLD_SEGMENT 0.1
+#define HOLD_SEGMENT 0.2
 
-#define ROTATION_DURATION 0.5
+#define ROTATION_DURATION 0.5f
 #define BLINDING_DURATION 1
 #define GHOST_DURATION 0.5
 #define RANK_DURATION 2
 #define RANK_BLINK 0.08
 
-#define EFFECT_IN 0.2
+#define EFFECT_IN 0.06
 #define EFFECT_OUT 0.3
 
-#define BLUR_WIDTH 0.1f
+#define BLUR_WIDTH 0.03f
 
 #if defined(PLATFORM_DESKTOP)
 #define GLSL_VERSION 330
 #else  // PLATFORM_RPI, PLATFORM_ANDROID, PLATFORM_WEB
 #define GLSL_VERSION 100
 #endif
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 namespace {
 RotationStack addRotation(RotationStack rs, Rotation r) {
@@ -176,7 +181,7 @@ void LevelScreen::updateState(double time, double prevFrameTime) {
   double deltaTime = time - prevFrameTime;
   float musicTime = GetMusicTimePlayed(music);
 
-  if (musicTime != lastMusicTime) {
+  if (musicTime != lastMusicTime && musicTime != 0) {
     gameTime = musicTime;
   } else if (deltaTime < (1.0 / 20)) {
     gameTime += deltaTime;
@@ -209,6 +214,7 @@ void LevelScreen::updateState(double time, double prevFrameTime) {
       double timeUntil = event->gameTime - gameTime;
 
       if (timeUntil < -GOOD_WITHIN) {
+        gameScore.miss++;
         rankTime = 0;
         lastRank = Rank::MISS;
 
@@ -266,19 +272,18 @@ void LevelScreen::updateState(double time, double prevFrameTime) {
 
       if (currentSegment < maxSegment) {
         if (currentSegment == event->activeData.processedSegments &&
-                (arrowHold->direction == Direction::LEFT &&
-                 IsKeyDown(KEY_LEFT)) ||
-            (arrowHold->direction == Direction::TOP && IsKeyDown(KEY_UP)) ||
-            (arrowHold->direction == Direction::RIGHT &&
-             IsKeyDown(KEY_RIGHT)) ||
-            (arrowHold->direction == Direction::BOTTOM &&
-             IsKeyDown(KEY_DOWN))) {
+            ((arrowHold->direction == Direction::LEFT && IsKeyDown(KEY_LEFT)) ||
+             (arrowHold->direction == Direction::TOP && IsKeyDown(KEY_UP)) ||
+             (arrowHold->direction == Direction::RIGHT &&
+              IsKeyDown(KEY_RIGHT)) ||
+             (arrowHold->direction == Direction::BOTTOM &&
+              IsKeyDown(KEY_DOWN)))) {
           scoreNumber += HOLD_SCORE;
-          ghosts.push_back({arrow->direction, 0, false});
+          ghosts.push_back({arrowHold->direction, 0, false});
           event->activeData.processedSegments++;
         } else if (currentSegment > event->activeData.processedSegments) {
           gameScore.missedHold = true;
-          ghosts.push_back({arrow->direction, 0, true});
+          ghosts.push_back({arrowHold->direction, 0, true});
           event->activeData.processedSegments++;
         }
       }
@@ -310,7 +315,7 @@ void LevelScreen::updateState(double time, double prevFrameTime) {
         if (gameTime < event->gameTime + BLINDING_DURATION) {
           blindnessTime = gameTime - event->gameTime;
         } else if (gameTime > endTime - BLINDING_DURATION) {
-          blindnessTime = gameTime - endTime + BLINDING_DURATION;
+          blindnessTime = endTime - gameTime;
         } else {
           blindnessTime = BLINDING_DURATION;
         }
@@ -331,8 +336,8 @@ void LevelScreen::updateState(double time, double prevFrameTime) {
         float blurWidth;
 
         if (gameTime >= event->gameTime) {
-          blurWidth = EaseSineOut((float)gameTime - (float)event->gameTime,
-                                  BLUR_WIDTH, -BLUR_WIDTH, (float)EFFECT_OUT);
+          blurWidth = EaseSineInOut((float)gameTime - (float)event->gameTime,
+                                    BLUR_WIDTH, -BLUR_WIDTH, (float)EFFECT_OUT);
         } else {
           blurWidth = EaseSineIn((float)gameTime - (float)inTime, 0.0f,
                                  BLUR_WIDTH, (float)EFFECT_IN);
@@ -357,8 +362,9 @@ void LevelScreen::updateState(double time, double prevFrameTime) {
         float bloomStrength;
 
         if (gameTime >= event->gameTime) {
-          bloomStrength = EaseSineOut((float)gameTime - (float)event->gameTime,
-                                      1.0, -1.0, (float)EFFECT_OUT);
+          bloomStrength =
+              EaseSineInOut((float)gameTime - (float)event->gameTime, 1.0, -1.0,
+                            (float)EFFECT_OUT);
         } else {
           bloomStrength = EaseSineIn((float)gameTime - (float)inTime, 0.0, 1.0,
                                      (float)EFFECT_IN);
@@ -375,6 +381,18 @@ void LevelScreen::updateState(double time, double prevFrameTime) {
   }
 
   fetchNewEvents();
+
+  // Show end screen when no events left
+  // -----------------------------------
+  if (endScreenTime != -1) {
+    endScreenTime += deltaTime;
+
+    if (IsKeyPressed(KEY_ENTER)) {
+      game.setNextScreen(std::make_unique<MenuScreen>(game));
+    }
+  } else if (processedIndex >= data.events.size() && activeEvents.size() == 0) {
+    endScreenTime = 0;
+  }
 }
 
 void LevelScreen::drawFrame() {
@@ -398,7 +416,7 @@ void LevelScreen::drawFrame() {
   if (rotationTime >= 0 && rotationTime <= ROTATION_DURATION) {
     float delta = (rotation == Rotation::CWISE) ? 90.0f : -90.0f;
     axisCamera.rotation =
-        EaseSineIn((float)rotationTime, 0.0f, delta, ROTATION_DURATION);
+        EaseSineInOut((float)rotationTime, 0.0f, delta, ROTATION_DURATION);
   } else {
     axisCamera.rotation = 0;
   }
@@ -586,8 +604,9 @@ void LevelScreen::drawFrame() {
 
   // Draw score
   // ----------
-  float fillAngle = EaseLinearNone(GetMusicTimePlayed(music), 180, -360,
-                                   GetMusicTimeLength(music));
+  float timePlayed = MIN(GetMusicTimeLength(music), gameTime);
+  float fillAngle =
+      EaseLinearNone(timePlayed, 180, -360, GetMusicTimeLength(music));
 
   DrawCircle(GAMEWIDTH / 2, GAMEHEIGHT / 2, centerRadius, axisColor);
   DrawCircleLines(GAMEWIDTH / 2, GAMEHEIGHT / 2, centerRadius, axisBorderColor);
@@ -671,6 +690,106 @@ void LevelScreen::drawFrame() {
                                      GAMEHEIGHT / 2 + padsRadius + offset,
                                      arrowSize, Fade(ghostColor, opacity));
         break;
+    }
+  }
+
+  // Draw end screen
+  // ---------------
+  if (endScreenTime >= 1.0) {
+    const int width = 300;
+    const int height = 280;
+    const int fontSize = 20;
+    const double delay = 1.0;
+    int step = (int)(endScreenTime / delay);
+
+    Mark mark = MarkProvider::getMark(gameScore);
+
+    int startx = (GAMEWIDTH - width) / 2;
+    int starty = (GAMEHEIGHT - height) / 2;
+
+    DrawRectangle(startx, starty, width, height, {16, 16, 16, 180});
+    DrawRectangleLines(startx, starty, width, height,
+                       gameScore.missedHold ? WHITE : GOLD);
+
+    int padding = 15;
+    int textx = startx + padding;
+    int rightx = startx + width - padding;
+    int texty = starty + padding;
+    int spacing = fontSize + 2;
+
+    if (step >= 1) {
+      DrawText("perfect", textx, texty, fontSize, WHITE);
+      const char* text = TextFormat("%d", gameScore.perfect);
+      int twidth = MeasureText(text, fontSize);
+      DrawText(text, rightx - twidth, texty, fontSize, WHITE);
+    }
+
+    if (step >= 2) {
+      DrawText("great", textx, texty + spacing, fontSize, WHITE);
+      const char* text = TextFormat("%d", gameScore.great);
+      int twidth = MeasureText(text, fontSize);
+      DrawText(text, rightx - twidth, texty + spacing, fontSize, WHITE);
+    }
+
+    if (step >= 3) {
+      DrawText("good", textx, texty + spacing * 2, fontSize, WHITE);
+      const char* text = TextFormat("%d", gameScore.good);
+      int twidth = MeasureText(text, fontSize);
+      DrawText(text, rightx - twidth, texty + spacing * 2, fontSize, WHITE);
+    }
+
+    if (step >= 4) {
+      DrawText("miss", textx, texty + spacing * 3, fontSize, WHITE);
+      const char* text = TextFormat("%d", gameScore.miss);
+      int twidth = MeasureText(text, fontSize);
+      DrawText(text, rightx - twidth, texty + spacing * 3, fontSize, WHITE);
+    }
+
+    if (step >= 5) {
+      const char* text;
+      Color markColor;
+
+      switch (mark) {
+        case Mark::S:
+          text = "S";
+          markColor = WHITE;
+          break;
+        case Mark::A:
+          text = "A";
+          markColor = GREEN;
+          break;
+        case Mark::B:
+          text = "B";
+          markColor = BLUE;
+          break;
+        case Mark::C:
+          text = "C";
+          markColor = BEIGE;
+          break;
+        case Mark::D:
+          text = "D";
+          markColor = YELLOW;
+          break;
+        case Mark::E:
+          text = "E";
+          markColor = YELLOW;
+          break;
+        case Mark::F:
+          text = "F";
+          markColor = RED;
+          break;
+      }
+
+      int twidth = MeasureText(text, 60);
+      DrawText(text, (GAMEWIDTH - twidth) / 2, GAMEHEIGHT / 2 - 30, 60,
+               markColor);
+    }
+
+    if (step >= 6) {
+      const char* text = "press enter to play again";
+      int twidth = MeasureText(text, 20);
+      DrawText(text, (GAMEWIDTH - twidth) / 2, (GAMEHEIGHT + height) / 2 - 50,
+               20, GRAY);
     }
   }
 

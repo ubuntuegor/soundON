@@ -49,6 +49,8 @@ class LevelScreen : public BaseScreen {
 
   double blindnessTime = -1;
 
+  double endScreenTime = -1;
+
   LevelBackground bg;
   Camera2D axisCamera;
 
