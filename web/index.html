@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+    <title>soundON!</title>
+    <style>
+      body {
+        background-color: black;
+        color: white;
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+      }
+
+      .emscripten {
+        padding-right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+      }
+
+      canvas.emscripten {
+        border: 0 none;
+        background-color: #000;
+      }
+
+      #status {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+      }
+
+      .fullscreen-button {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+
+      .link {
+        margin-top: 10px;
+      }
+
+      .link a,
+      .link a:visited {
+        color: gray;
+      }
+
+      .link a:active {
+        color: white;
+      }
+
+      .clickpopup {
+        background-color: rgba(80, 80, 80, 0.3);
+        user-select: none;
+        text-align: center;
+        width: 100%;
+        position: absolute;
+        font-size: 40px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 100;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="clickpopup" id="clickpopup">Click to enable input</div>
+    <div id="status">Downloading...</div>
+    <input
+      class="fullscreen-button"
+      type="button"
+      onclick="Module.requestFullscreen(0,1)"
+      value="Fullscreen"
+    />
+    <div class="container">
+      <canvas
+        class="emscripten"
+        id="canvas"
+        oncontextmenu="event.preventDefault()"
+        tabindex="-1"
+      ></canvas>
+      <div class="link"><a href="#">...or download the EXE</a></div>
+    </div>
+
+    <script type="text/javascript">
+      var statusElement = document.getElementById("status");
+      var progressElement = document.getElementById("progress");
+      var spinnerElement = document.getElementById("spinner");
+
+      var Module = {
+        preRun: [],
+        postRun: [],
+        print: (function () {
+          var element = document.getElementById("output");
+          if (element) element.value = ""; // clear browser cache
+          return function (text) {
+            if (arguments.length > 1)
+              text = Array.prototype.slice.call(arguments).join(" ");
+            // These replacements are necessary if you render to raw HTML
+            //text = text.replace(/&/g, "&amp;");
+            //text = text.replace(/</g, "&lt;");
+            //text = text.replace(/>/g, "&gt;");
+            //text = text.replace('\n', '<br>', 'g');
+            console.log(text);
+            if (element) {
+              element.value += text + "\n";
+              element.scrollTop = element.scrollHeight; // focus on bottom
+            }
+          };
+        })(),
+        canvas: (() => {
+          var canvas = document.getElementById("canvas");
+
+          // As a default initial behavior, pop up an alert when webgl context is lost. To make your
+          // application robust, you may want to override this behavior before shipping!
+          // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
+          canvas.addEventListener(
+            "webglcontextlost",
+            (e) => {
+              alert("WebGL context lost. You will need to reload the page.");
+              e.preventDefault();
+            },
+            false
+          );
+
+          return canvas;
+        })(),
+        setStatus: (text) => {
+          if (!Module.setStatus.last)
+            Module.setStatus.last = { time: Date.now(), text: "" };
+          if (text === Module.setStatus.last.text) return;
+          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+          var now = Date.now();
+          if (m && now - Module.setStatus.last.time < 30) return; // if this is a progress update, skip it if too soon
+          Module.setStatus.last.time = now;
+          Module.setStatus.last.text = text;
+          statusElement.innerHTML = text;
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: (left) => {
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(
+            left
+              ? "Preparing... (" +
+                  (this.totalDependencies - left) +
+                  "/" +
+                  this.totalDependencies +
+                  ")"
+              : "All downloads complete."
+          );
+        },
+      };
+      Module.setStatus("Downloading...");
+      window.onerror = () => {
+        Module.setStatus("Exception thrown, see JavaScript console");
+        spinnerElement.style.display = "none";
+        Module.setStatus = (text) => {
+          if (text) console.error("[post-exception status] " + text);
+        };
+      };
+    </script>
+
+    <script>
+      function blockKey(e) {
+        e.stopImmediatePropagation();
+      }
+
+      window.addEventListener("keydown", blockKey, true);
+
+      window.addEventListener("keyup", blockKey, true);
+
+      window.addEventListener("click", (e) => {
+        window.removeEventListener("keydown", blockKey, true);
+        window.removeEventListener("keyup", blockKey, true);
+        document.getElementById("clickpopup").hidden = true;
+      });
+
+      window.addEventListener(
+        "keydown",
+        (ev) => {
+          if (
+            [
+              "Space",
+              "ArrowUp",
+              "ArrowDown",
+              "ArrowLeft",
+              "ArrowRight",
+            ].indexOf(ev.code) > -1
+          ) {
+            ev.preventDefault();
+          }
+        },
+        false
+      );
+    </script>
+    <script async src="sosu.js"></script>
+  </body>
+</html>
