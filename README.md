@@ -1,6 +1,9 @@
 # soundON!
 
 Rhythm game.
+
+Powered by [raylib](https://www.raylib.com/).
+
 Playable at https://bnt.to/soundon-web/
 
 ![game](https://github.com/ubuntuegor/soundON/assets/6959139/64dfa0d7-c01e-4e00-a62f-b2d925b9dae7)
