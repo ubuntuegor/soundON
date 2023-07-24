@@ -34,7 +34,7 @@ void main()
         {
             vec4 clr = texture2D(texture0, fragTexCoord + vec2(x, y)*sampleRange);
             float gray = dot(clr.rgb, vec3(0.299, 0.587, 0.114));
-            float factor = 1.0 / (1 + abs(x) + abs(y));
+            float factor = 1.0 / (1.0 + abs(float(x)) + abs(float(y)));
             if (gray > threshold) {
                 sum += clr * factor;
             }
