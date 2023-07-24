@@ -606,7 +606,7 @@ void LevelScreen::drawFrame() {
 
   // Draw score
   // ----------
-  float timePlayed = MIN(GetMusicTimeLength(music), gameTime);
+  float timePlayed = MIN(GetMusicTimeLength(music), (float)gameTime);
   float fillAngle =
       EaseLinearNone(timePlayed, 180, -360, GetMusicTimeLength(music));
 
